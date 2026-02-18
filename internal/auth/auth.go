@@ -1,42 +1,26 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
-	"testing"
+	"strings"
 )
 
-func TestGetAPIKey_MissingHeader(t *testing.T) {
-	headers := http.Header{}
+var ErrNoAuthHeaderIncluded = errors.New("no authorization header included")
 
-	_, err := GetAPIKey(headers)
-
-	if err == nil {
-		t.Fatal("expected error when Authorization header is missing")
+// GetAPIKey extracts an API key from the Authorization header.
+// Expected format: "ApiKey <key>"
+func GetAPIKey(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", ErrNoAuthHeaderIncluded
 	}
+
+	splitAuth := strings.Split(authHeader, " ")
+	if len(splitAuth) < 2 || splitAuth[0] != "ApiKey" {
+		return "", errors.New("malformed authorization header")
+	}
+
+	return splitAuth[1], nil
 }
 
-func TestGetAPIKey_MalformedHeader(t *testing.T) {
-	headers := http.Header{}
-	headers.Set("Authorization", "Bearer abc123")
-
-	_, err := GetAPIKey(headers)
-
-	if err == nil {
-		t.Fatal("expected error for malformed authorization header")
-	}
-}
-
-func TestGetAPIKey_ValidHeader(t *testing.T) {
-	headers := http.Header{}
-	headers.Set("Authorization", "ApiKey my-secret-key")
-
-	key, err := GetAPIKey(headers)
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if key != "my-secret-key" {
-		t.Fatalf("expected key 'my-secret-key', got '%s'", key)
-	}
-}
