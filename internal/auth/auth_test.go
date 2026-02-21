@@ -18,4 +18,3 @@ func TestGetAPIKey(t *testing.T) {
 		t.Fatalf("expected testkey, got %s", key)
 	}
 }
-
