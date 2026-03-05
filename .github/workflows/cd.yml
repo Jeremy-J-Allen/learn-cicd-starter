@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   deploy:
     name: Deploy
@@ -19,3 +23,18 @@ jobs:
 
       - name: Build production app
         run: ./scripts/buildprod.sh
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Build and push image to Artifact Registry
+        run: |
+          gcloud builds submit --tag us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/notely-ar-repo/notely:latest .
