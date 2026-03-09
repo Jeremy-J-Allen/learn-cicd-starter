@@ -29,10 +29,6 @@ jobs:
       - name: Install goose
         run: 
           go install github.com/pressly/goose/v3/cmd/goose@latest
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Check goose version
-        run: goose -version
 
       - name: Build production app
         run: ./scripts/buildprod.sh
