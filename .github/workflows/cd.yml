@@ -48,7 +48,19 @@ jobs:
       - name: Build and push Docker image
         run: gcloud builds submit --tag us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/notely-ar-repo/notely:latest .
 
+      - name: Install goose
+        run: |
+          go install github.com/pressly/goose/v3/cmd/goose@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Verify goose
+        run: |
+          which goose
+          goose -version
+
       - name: Run migrations
+        env:
+          PATH: ${{ env.PATH }}:${{ github.workspace }}/../go/bin:/home/runner/go/bin
         run: ./scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
